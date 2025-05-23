@@ -22,6 +22,16 @@ export class UserService {
         return userEmail
     };
 
+    private async findUserById(id:string):Promise<User>{
+        const findUser = await this.prismaService.user.findUnique({
+            where:{
+                id:id
+            }
+        });
+
+        return findUser;
+    };
+
     public async createUser(data:CreateUserDTO):Promise<User>{
         try{
             
@@ -69,6 +79,31 @@ export class UserService {
         }catch(err){
             this.logger.error(`Error to create the user! \n Details: ${err}`);
             throw new HttpException(`Error to create the user! \n Details: ${err}`,500)
+        };
+    };
+
+    public async findSpecifiedUser(userWanted:User,data:{name:string,email:string,photo:string,password:string,bio:string}):Promise<User>{
+        try{
+
+            const findUserById = await this.findUserById(userWanted.id);
+
+        if(!findUserById){
+            this.logger.error(`Error to find the user!`);
+            throw new HttpException(`Error to find the user!`,404);
+        };
+
+            const changeUserSpecs = await this.prismaService.user.update({
+                where:{
+                    id:findUserById.id
+                },
+                data:data
+            });
+
+            return changeUserSpecs;
+
+        }catch(err){
+            this.logger.error(`Error to update the user! \n Details: ${err}`);
+            throw new HttpException(`Error to update the user! \n Details: ${err}`,500);
         };
     };
 };
