@@ -18,7 +18,7 @@ model User {
   name      String
   email     String  @unique
   role    Roles @default(USER)
-  photo    String
+  photo    String @default("")
   password  String
   following String[]
   followers String[]
