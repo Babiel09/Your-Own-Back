@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { IsEmail, IsInt, IsString, MaxLength, MinLength } from "class-validator";
 
 @Injectable()
-export class CreateUser{
+export class CreateUserDTO{
     
     @IsString({message:"The name must be a string!"})
     name:string;
