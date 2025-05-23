@@ -82,10 +82,10 @@ export class UserService {
         };
     };
 
-    public async findSpecifiedUser(userWanted:User,data:{name:string,email:string,photo:string,password:string,bio:string}):Promise<User>{
+    public async findSpecifiedUser(userWantedId:string,data:{name:string,email:string,photo:string,password:string,bio:string}):Promise<User>{
         try{
 
-            const findUserById = await this.findUserById(userWanted.id);
+            const findUserById = await this.findUserById(userWantedId);
 
         if(!findUserById){
             this.logger.error(`Error to find the user!`);
@@ -106,5 +106,29 @@ export class UserService {
             throw new HttpException(`Error to update the user! \n Details: ${err}`,500);
         };
     };
+
+    public async deleteUser(userWantedId:string):Promise<User>{
+        try{
+            
+            const findUserToDelete = await this.findUserById(userWantedId);
+
+            if(!findUserToDelete){
+            this.logger.error(`Error to find the user!`);
+            throw new HttpException(`Error to find the user!`,404);
+            };
+
+            const userDead = await this.prismaService.user.delete({
+                where:{
+                    id:findUserToDelete.id
+                }
+            });
+
+            return userDead;
+
+        }catch(err){
+            this.logger.error(`Error to update the user! \n Details: ${err}`);
+            throw new HttpException(`Error to update the user! \n Details: ${err}`,500);
+        };
+    }
 };
 
