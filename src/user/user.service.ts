@@ -10,10 +10,10 @@ export class UserService {
     private logger:Logger = new Logger(UserService.name);
     constructor(
         private redisService:RedisService, 
-        private prismaServiceService:PrismaService){};
+        private prismaService:PrismaService){};
 
     private async verifyEmail(email:string):Promise<User>{
-        const userEmail:User = await this.prismaServiceService.user.findUnique({
+        const userEmail:User = await this.prismaService.user.findUnique({
             where:{
                 email:email
             }
@@ -32,7 +32,7 @@ export class UserService {
                 throw new HttpException(`This email(${data.email}) is already been used!`, 401)
             };
 
-            const createUser = await this.prismaServiceService.user.create({
+            const createUser = await this.prismaService.user.create({
                 data:data,
             });
 
@@ -40,7 +40,35 @@ export class UserService {
 
         }catch(err){
             this.logger.error(`Error to create the user! \n Details: ${err}`);
-            throw new HttpException(`Error to create the user! \n Details: ${err}`,409)
+            throw new HttpException(`Error to create the user! \n Details: ${err}`,500)
+        };
+    };
+
+    public async getAllUsers():Promise<User[]>{
+        try{
+            const showAllUsersInCache = await this.redisService.get("users");
+
+            if(!showAllUsersInCache){
+                const showAllUsersfromDB = await this.prismaService.user.findMany();
+
+                const addUsersToCache = await this.redisService.set(
+                "user",
+                JSON.stringify(showAllUsersInCache),
+                "EX",
+                300
+                );
+
+                if(!addUsersToCache){
+                    this.logger.error(`Error to set the users in the cache!`);
+                    throw new HttpException(`Error to set the users in the cache!`,403)
+                };
+
+                return showAllUsersfromDB;
+            };
+
+        }catch(err){
+            this.logger.error(`Error to create the user! \n Details: ${err}`);
+            throw new HttpException(`Error to create the user! \n Details: ${err}`,500)
         };
     };
 };
